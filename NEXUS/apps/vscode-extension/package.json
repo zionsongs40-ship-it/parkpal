@@ -1,0 +1,26 @@
+{
+  "name": "nexus-vscode",
+  "displayName": "NEXUS AI Coding Agent",
+  "description": "Your personal AI coding agent",
+  "version": "1.0.0",
+  "publisher": "nexus-dev",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "type": "module",
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "onCommand:nexus.openChat"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "nexus.openChat",
+        "title": "NEXUS: Open AI Agent"
+      }
+    ]
+  },
+  "dependencies": {
+    "@nexus/agent-core": "*"
+  }
+}

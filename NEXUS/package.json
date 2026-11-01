@@ -1,0 +1,15 @@
+
+{
+  "name": "nexus",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/agent-core",
+    "apps/desktop",
+    "apps/vscode-extension"
+  ],
+  "scripts": {
+    "test": "node --test"
+  }
+}
