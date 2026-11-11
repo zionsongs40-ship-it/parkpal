@@ -19,7 +19,11 @@ const POI_FILE = path.join(__dirname, 'data', 'trivandrum-pois.json');
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '7mb' }));
+
+// Register offline map routes before the public static fallback.
+registerOfflineMapRoutes(app, { express, dataDir: path.join(__dirname, 'data') });
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // Optional worldwide offline map archive (PMTiles).
 registerOfflineMapRoutes(app, { express, dataDir: path.join(__dirname, 'data') });
