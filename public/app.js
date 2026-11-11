@@ -40,7 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     demoStations: [],
     communityStations: [],
     isPickingNexusLocation: false,
-    pickedLocation: null
+    pickedLocation: null,
+    navigationStations: []
   };
 
   // Google Maps Layers
@@ -300,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stationMarkers = [];
 
     const visibleStations = state.isNavigating
-      ? filteredList.filter(st => !st.isDemoData && st.isApproved !== false)
+      ? state.navigationStations
       : filteredList;
 
     visibleStations.forEach(st => {
@@ -396,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Approved community stations remain visible as permanent green map pins.
   function setNavigationMode(active) {
     state.isNavigating = active;
+    if (!active) state.navigationStations = [];
     bottomSheet.classList.remove('open');
 
     if (active) {
@@ -418,25 +420,47 @@ document.addEventListener('DOMContentLoaded', () => {
     radarOverlay.style.display = 'flex';
     bottomSheet.classList.remove('open');
 
+    // NEXORA SCAN is centred on the user's chosen map pin / current map centre.
     const center = map.getCenter();
-    setTimeout(() => playRadarPing(), 600);
+    setTimeout(() => playRadarPing(), 500);
 
-    // Load mapped parking facilities near the current map center.
-    const scanSucceeded = await loadDemoParking(center.lat, center.lng, false);
-
-    setTimeout(() => {
-      radarOverlay.style.display = 'none';
-      // A scan may finish after the user has already started a route.
-      // Do not reopen or repopulate nearby results during navigation.
-      if (state.isNavigating) return;
-      renderParkingSheet();
-      bottomSheet.classList.add('open');
-      if (scanSucceeded) {
-        showToast(`Demo scan complete: ${state.stations.length} simulated parking stations generated.`);
-      } else {
-        showToast('The parking demo service is unavailable.', 'fa-circle-exclamation');
+    try {
+      const response = await fetch(
+        `/api/nexora/find?lat=${encodeURIComponent(center.lat)}&lng=${encodeURIComponent(center.lng)}`
+      );
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'NEXORA scan failed.');
       }
-    }, 1200);
+
+      state.demoStations = [];
+      state.stations = (result.stations || []).map(station => ({
+        ...station,
+        isDemoData: false,
+        isApproved: true,
+        distance: Number(station.distanceKm) < 1
+          ? `${Math.round(Number(station.distanceKm) * 1000)} m`
+          : `${Number(station.distanceKm).toFixed(1)} km`
+      }));
+      renderStationMarkers(state.stations);
+      document.getElementById('sheetTitle').textContent = 'NEXORA · Available Parking';
+      document.getElementById('sheetSubtitle').textContent =
+        `Within 2 km of your selected map pin · ${state.stations.length} found`;
+
+      setTimeout(() => {
+        radarOverlay.style.display = 'none';
+        if (state.isNavigating) return;
+        renderParkingSheet();
+        bottomSheet.classList.add('open');
+        showToast(
+          result.message || `NEXORA found ${state.stations.length} available approved station(s).`,
+          'fa-location-crosshairs'
+        );
+      }, 450);
+    } catch (error) {
+      radarOverlay.style.display = 'none';
+      showToast(error.message || 'NEXORA could not search parking stations.', 'fa-circle-exclamation');
+    }
   }
 
   // Render Parking List in Bottom Sheet
@@ -535,6 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Route preview to a simulated parking station.
   async function startNavigation(station) {
     setNavigationMode(true);
+    state.navigationStations = [station];
 
     if (routePolyline) map.removeLayer(routePolyline);
     renderStationMarkers();
@@ -584,6 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
       routePolyline = null;
     }
     document.getElementById('navBanner').style.display = 'none';
+    state.navigationStations = [];
     setNavigationMode(false);
     renderStationMarkers();
     showToast("Navigation ended. Parking markers are visible again.", "fa-route");
@@ -807,6 +833,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const poi = tripResults[Number(button.getAttribute('data-trip-index'))];
         if (!poi) return;
         selectedTripLocation = poi;
+        resetNexoraTripPanel();
+        btnStartTripRoute.disabled = false;
         tripSelectedLocation.innerHTML = `<strong>${escapeHtml(poi.name)}</strong><span>${escapeHtml(poi.category || 'Place')} · ${Number(poi.lat).toFixed(5)}, ${Number(poi.lng).toFixed(5)}</span>`;
         btnStartTripRoute.disabled = false;
         tripLocationResults.querySelectorAll('.trip-location-result').forEach(item => {
@@ -898,6 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function clearTripDestinationSelection() {
     selectedTripLocation = null;
     tripSelectedLocation.textContent = 'No destination selected yet.';
+    resetNexoraTripPanel();
     btnStartTripRoute.disabled = true;
   }
 
@@ -911,58 +940,190 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTripLocations();
   });
 
-  btnStartTripRoute.addEventListener('click', async () => {
-    if (!selectedTripLocation) {
-      showToast('Choose a destination from the city locations first.', 'fa-location-dot');
+  let tripRouteCoordinates = null;
+  let tripParkingResults = [];
+
+  function resetNexoraTripPanel(message = 'Choose a destination, then find available parking stops.') {
+    tripRouteCoordinates = null;
+    tripParkingResults = [];
+    document.getElementById('nexoraTripStatus').textContent = message;
+    document.getElementById('nexoraTripResults').innerHTML =
+      '<p class="nexora-parking-empty">No route search yet.</p>';
+    btnStartTripRoute.innerHTML = '<i class="fa-solid fa-magnifying-glass-location"></i> Find Route Parking';
+  }
+
+  function renderNexoraTripStations(stations) {
+    const resultsEl = document.getElementById('nexoraTripResults');
+    if (!stations.length) {
+      resultsEl.innerHTML =
+        '<p class="nexora-parking-empty">No approved parking stations with available slots were found within 2 km of this route. You can still start the trip without a parking stop.</p>';
       return;
     }
-    planTripModal.style.display = 'none';
-    const destName = selectedTripLocation.name;
-    const targetCoords = [Number(selectedTripLocation.lat), Number(selectedTripLocation.lng)];
-    const returnChecked = document.getElementById('tripIncludeReturn').checked;
 
-    if (routePolyline) map.removeLayer(routePolyline);
-    setNavigationMode(true);
-    renderStationMarkers();
+    resultsEl.innerHTML = stations.map((station, index) => {
+      const distance = Number(station.distanceToRouteKm);
+      const distanceLabel = distance < 1
+        ? `${Math.round(distance * 1000)} m from route`
+        : `${distance.toFixed(1)} km from route`;
+      return `<label class="nexora-parking-option">
+        <input type="checkbox" class="nexora-trip-choice" data-station-index="${index}">
+        <span class="nexora-parking-option-copy">
+          <strong>${escapeHtml(station.name || 'Approved parking station')}</strong>
+          <small>${escapeHtml(distanceLabel)} · ${escapeHtml(station.slotsAvailable)} available slots · ${escapeHtml(station.rate || station.price || 'Community parking')}</small>
+        </span>
+      </label>`;
+    }).join('');
+  }
 
-    let routeCoords = [state.userLocation, targetCoords];
-    let distanceKm = '—';
-    let driveMinutes = '—';
-
-    try {
-      const res = await fetch(`/api/route?startLat=${state.userLocation[0]}&startLng=${state.userLocation[1]}&endLat=${targetCoords[0]}&endLng=${targetCoords[1]}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && Array.isArray(json.coordinates) && json.coordinates.length) {
-          routeCoords = json.coordinates;
-          distanceKm = json.distanceKm;
-          driveMinutes = json.durationMinutes;
-        }
-      }
-    } catch (error) {
-      showToast('Route service is offline; showing a straight-line preview.', 'fa-route');
+  async function findTripParkingAlongRoute() {
+    if (!selectedTripLocation) {
+      showToast('Choose a destination first.', 'fa-location-dot');
+      return;
     }
 
-    routePolyline = L.polyline(routeCoords, {
-      color: '#10b981',
-      weight: 6,
-      opacity: 0.9,
-      lineCap: 'round',
-      lineJoin: 'round'
-    }).addTo(map);
+    btnStartTripRoute.disabled = true;
+    btnStartTripRoute.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> NEXORA is searching…';
+    document.getElementById('nexoraTripStatus').textContent =
+      'Building your route and checking approved parking within 2 km.';
+    document.getElementById('nexoraTripResults').innerHTML =
+      '<p class="nexora-parking-empty">NEXORA is checking the route corridor…</p>';
 
-    map.fitBounds(routePolyline.getBounds(), { padding: [40, 40] });
+    const destination = [Number(selectedTripLocation.lat), Number(selectedTripLocation.lng)];
+    try {
+      const routeResponse = await fetch(
+        `/api/route?startLat=${state.userLocation[0]}&startLng=${state.userLocation[1]}&endLat=${destination[0]}&endLng=${destination[1]}`
+      );
+      const routeJson = await routeResponse.json();
+      if (!routeResponse.ok || !routeJson.success ||
+          !Array.isArray(routeJson.coordinates) || routeJson.coordinates.length < 2) {
+        throw new Error(routeJson.message || 'Could not build a route to this destination.');
+      }
 
-    const navBanner = document.getElementById('navBanner');
-    document.getElementById('navDestName').textContent = `Trip: ${destName}`;
-    document.getElementById('navDist').innerHTML = `<i class="fa-solid fa-route"></i> ${distanceKm} km`;
-    document.getElementById('navETA').innerHTML = `<i class="fa-regular fa-clock"></i> ${driveMinutes} mins`;
-    document.getElementById('navSlots').textContent = returnChecked
-      ? 'Demo route; parking is not reserved'
-      : 'Demo route; not reserved';
-    navBanner.style.display = 'flex';
+      tripRouteCoordinates = routeJson.coordinates;
+      const discoveryResponse = await fetch('/api/nexora/along-route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ routeCoordinates: tripRouteCoordinates })
+      });
+      const discoveryJson = await discoveryResponse.json();
+      if (!discoveryResponse.ok || !discoveryJson.success) {
+        throw new Error(discoveryJson.message || 'NEXORA could not inspect this route.');
+      }
 
-    showToast(`Trip planned to ${destName}. Parking is not reserved.`, 'fa-route');
+      tripParkingResults = Array.isArray(discoveryJson.stations)
+        ? discoveryJson.stations
+        : [];
+      renderNexoraTripStations(tripParkingResults);
+      document.getElementById('nexoraTripStatus').textContent =
+        `NEXORA found ${tripParkingResults.length} approved available station(s) along the route. Select one or more.`;
+      document.getElementById('tripDistVal').textContent =
+        routeJson.distanceKm ? `${routeJson.distanceKm} km` : '—';
+      document.getElementById('tripTimeVal').textContent =
+        routeJson.durationMinutes ? `${routeJson.durationMinutes} min` : '—';
+      document.getElementById('tripParkVal').textContent =
+        tripParkingResults.length ? `${tripParkingResults.length} found` : 'No stops found';
+
+      btnStartTripRoute.disabled = false;
+      btnStartTripRoute.innerHTML = '<i class="fa-solid fa-route"></i> Start Trip with Selected Stops';
+      showToast(`NEXORA found ${tripParkingResults.length} route parking option(s).`, 'fa-check-circle');
+    } catch (error) {
+      tripRouteCoordinates = null;
+      tripParkingResults = [];
+      document.getElementById('nexoraTripStatus').textContent = error.message;
+      document.getElementById('nexoraTripResults').innerHTML =
+        `<p class="nexora-parking-empty">${escapeHtml(error.message)}</p>`;
+      btnStartTripRoute.disabled = false;
+      btnStartTripRoute.innerHTML = '<i class="fa-solid fa-rotate"></i> Try Route Search Again';
+    }
+  }
+
+  async function startPlannedTripWithSelectedStops() {
+    if (!selectedTripLocation || !tripRouteCoordinates) {
+      await findTripParkingAlongRoute();
+      return;
+    }
+
+    const destination = [Number(selectedTripLocation.lat), Number(selectedTripLocation.lng)];
+    const selectedIndexes = Array.from(
+      document.querySelectorAll('.nexora-trip-choice:checked')
+    ).map(input => Number(input.getAttribute('data-station-index')));
+    const selectedStops = selectedIndexes
+      .map(index => tripParkingResults[index])
+      .filter(Boolean)
+      .sort((a, b) => Number(a.routeProgress) - Number(b.routeProgress));
+
+    if (selectedStops.length > 6) {
+      showToast('Choose up to 6 parking stops for one trip.', 'fa-circle-exclamation');
+      return;
+    }
+
+    const waypoints = [
+      state.userLocation,
+      ...selectedStops.map(station => [Number(station.lat), Number(station.lng)]),
+      destination
+    ];
+
+    btnStartTripRoute.disabled = true;
+    btnStartTripRoute.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing trip…';
+    try {
+      const response = await fetch('/api/route/multi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ waypoints })
+      });
+      const route = await response.json();
+      if (!response.ok || !route.success ||
+          !Array.isArray(route.coordinates) || route.coordinates.length < 2) {
+        throw new Error(route.message || 'Could not build the multi-stop route.');
+      }
+
+      planTripModal.style.display = 'none';
+      setNavigationMode(true);
+      state.navigationStations = selectedStops;
+      if (routePolyline) map.removeLayer(routePolyline);
+      routePolyline = L.polyline(route.coordinates, {
+        color: '#10b981',
+        weight: 6,
+        opacity: 0.95,
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(map);
+
+      renderStationMarkers();
+      map.fitBounds(routePolyline.getBounds(), { padding: [45, 45] });
+
+      const navBanner = document.getElementById('navBanner');
+      document.getElementById('navDestName').textContent = selectedStops.length
+        ? `Trip to ${selectedTripLocation.name} · ${selectedStops.length} parking stop(s)`
+        : `Trip to ${selectedTripLocation.name}`;
+      document.getElementById('navDist').innerHTML =
+        `<i class="fa-solid fa-route"></i> ${route.distanceKm} km`;
+      document.getElementById('navETA').innerHTML =
+        `<i class="fa-regular fa-clock"></i> ${route.durationMinutes} mins`;
+      document.getElementById('navSlots').textContent = selectedStops.length
+        ? `${selectedStops.length} selected approved stop(s) · not reserved`
+        : 'No parking stop selected · not reserved';
+      navBanner.style.display = 'flex';
+      showToast(
+        selectedStops.length
+          ? `Trip started with ${selectedStops.length} selected parking stop(s).`
+          : 'Trip started directly to your destination.',
+        'fa-route'
+      );
+    } catch (error) {
+      showToast(error.message || 'Could not start the planned trip.', 'fa-circle-exclamation');
+    } finally {
+      btnStartTripRoute.disabled = false;
+      btnStartTripRoute.innerHTML = '<i class="fa-solid fa-route"></i> Start Trip with Selected Stops';
+    }
+  }
+
+  btnStartTripRoute.addEventListener('click', async () => {
+    if (!tripRouteCoordinates) {
+      await findTripParkingAlongRoute();
+    } else {
+      await startPlannedTripWithSelectedStops();
+    }
   });
 
   // FAB 4 & 5: Zoom In & Zoom Out
@@ -1044,6 +1205,7 @@ document.addEventListener('DOMContentLoaded', () => {
       routePolyline = null;
     }
     document.getElementById('navBanner').style.display = 'none';
+    state.navigationStations = [];
     setNavigationMode(false);
     renderStationMarkers();
     map.flyTo(state.userLocation, 15);
