@@ -44,28 +44,15 @@ document.addEventListener('DOMContentLoaded', () => {
     navigationStations: []
   };
 
-  // Google Maps Layers
+  // Local OpenStreetMap-derived PMTiles styles. The archive is served by ParkPal.
   const mapLayers = [
-    {
-      name: "Google Maps (Roadmap)",
-      layer: L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
-        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-        attribution: 'Map data &copy; Google Maps'
-      })
-    },
-    {
-      name: "Google Satellite (Real Aerial Imagery)",
-      layer: L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
-        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-        attribution: 'Imagery &copy; Google Satellite'
-      })
-    }
+    { name: "Offline Light Map", flavor: "light" },
+    { name: "Offline Dark Map", flavor: "dark" }
   ];
 
   // Map & Markers setup
   let map;
+  let baseMapLayer = null;
   let userMarker;
   let nexusLocationMarker = null;
   let userAccuracyCircle;
@@ -75,21 +62,28 @@ document.addEventListener('DOMContentLoaded', () => {
   let panDebounceTimer = null;
   let latestParkingRequestId = 0;
 
-  // Initialize Map with Google Maps
+  // Initialize map with the locally served PMTiles basemap
   function initMap() {
     map = L.map('map', {
       center: state.userLocation,
       zoom: state.zoomLevel,
       zoomControl: false,
-      attributionControl: false
+      attributionControl: true,
+      minZoom: 0,
+      maxZoom: 14
     });
 
     // Keep the NEXUS selection pin above ordinary station and user markers.
     map.createPane('nexusPinPane');
     map.getPane('nexusPinPane').style.zIndex = 750;
 
-    // Add Google Maps primary layer
-    mapLayers[0].layer.addTo(map);
+    // Load the local PMTiles basemap. The map archive is installed separately.
+    baseMapLayer = createOfflineBasemap(mapLayers[state.currentMapLayerIndex] || mapLayers[0]);
+    if (baseMapLayer) baseMapLayer.addTo(map);
+
+    map.attributionControl.addAttribution(
+      '© OpenStreetMap contributors | © Protomaps'
+    );
 
     // Initial User GPS Marker
     updateUserMarker();
@@ -123,13 +117,35 @@ document.addEventListener('DOMContentLoaded', () => {
     applyStartingLocation();
   }
 
-  // Toggle between road and satellite map layers.
+  // Create a Leaflet basemap backed by the local PMTiles archive.
+  function createOfflineBasemap(style) {
+    if (!window.protomapsL || typeof window.protomapsL.leafletLayer !== 'function') {
+      console.error('ParkPal: Protomaps Leaflet library did not load.');
+      showToast('Offline map renderer is missing. Check local vendor files.', 'fa-triangle-exclamation');
+      return null;
+    }
+
+    return window.protomapsL.leafletLayer({
+      url: '/maps/world.pmtiles',
+      flavor: style.flavor,
+      lang: 'en'
+    });
+  }
+
+  // Toggle between offline light and dark map styles.
   function toggleMapLayer() {
-    map.removeLayer(mapLayers[state.currentMapLayerIndex].layer);
+    if (!map) return;
+
+    if (baseMapLayer) map.removeLayer(baseMapLayer);
+
     state.currentMapLayerIndex = (state.currentMapLayerIndex + 1) % mapLayers.length;
     const nextLayer = mapLayers[state.currentMapLayerIndex];
-    nextLayer.layer.addTo(map);
-    showToast(`Map Style: ${nextLayer.name}`, 'fa-layer-group');
+    baseMapLayer = createOfflineBasemap(nextLayer);
+
+    if (baseMapLayer) {
+      baseMapLayer.addTo(map);
+      showToast(`Map Style: ${nextLayer.name}`, 'fa-layer-group');
+    }
   }
 
   // Update or create the draggable user location pin.
