@@ -25,9 +25,6 @@ registerOfflineMapRoutes(app, { express, dataDir: path.join(__dirname, 'data') }
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-// Optional worldwide offline map archive (PMTiles).
-registerOfflineMapRoutes(app, { express, dataDir: path.join(__dirname, 'data') });
-
 // Helper: Haversine distance formula (in km)
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth radius in km
