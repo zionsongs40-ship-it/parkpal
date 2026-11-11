@@ -66,6 +66,7 @@ function registerOfflineMapRoutes(app, options = {}) {
     res.json({
       success: true,
       ...manifest,
+      status: stats ? 'installed' : (manifest.status || 'not-installed'),
       installed: Boolean(stats),
       archiveSizeBytes: stats ? stats.size : 0
     });
