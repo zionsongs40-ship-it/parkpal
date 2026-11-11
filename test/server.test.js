@@ -37,6 +37,75 @@ test('ParkPal server API', async (t) => {
       assert.equal(body.count, body.data.length);
     });
 
+    await t.test('NEXORA route search returns only approved, available non-demo stations', async () => {
+      const stationsFile = path.join(__dirname, '..', 'data', 'stations.json');
+      const original = fs.readFileSync(stationsFile, 'utf8');
+      try {
+        fs.writeFileSync(stationsFile, JSON.stringify([
+          {
+            id: 'route-approved',
+            name: 'Approved Route Parking',
+            lat: 8.4855,
+            lng: 76.9879,
+            slotsAvailable: 4,
+            totalSlots: 8,
+            isApproved: true,
+            approvalStatus: 'approved',
+            isDemoData: false
+          },
+          {
+            id: 'route-demo',
+            name: 'Demo Route Parking',
+            lat: 8.4855,
+            lng: 76.9879,
+            slotsAvailable: 4,
+            isApproved: true,
+            approvalStatus: 'approved',
+            isDemoData: true
+          },
+          {
+            id: 'route-full',
+            name: 'Full Route Parking',
+            lat: 8.4855,
+            lng: 76.9879,
+            slotsAvailable: 0,
+            isApproved: true,
+            approvalStatus: 'approved',
+            isDemoData: false
+          }
+        ], null, 2), 'utf8');
+
+        const response = await fetch(`${baseUrl}/api/nexora/along-route`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            routeCoordinates: [
+              [8.48, 76.98],
+              [8.49, 76.99]
+            ]
+          })
+        });
+        const body = await response.json();
+        assert.equal(response.status, 200);
+        assert.equal(body.success, true);
+        assert.equal(body.agent, 'NEXORA');
+        assert.deepEqual(body.stations.map(station => station.id), ['route-approved']);
+      } finally {
+        fs.writeFileSync(stationsFile, original, 'utf8');
+      }
+    });
+
+    await t.test('multi-stop route rejects invalid waypoint lists', async () => {
+      const response = await fetch(`${baseUrl}/api/route/multi`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ waypoints: [[8.48, 76.98]] })
+      });
+      const body = await response.json();
+      assert.equal(response.status, 400);
+      assert.equal(body.success, false);
+    });
+
     await t.test('web app is served from the public folder', async () => {
       const response = await fetch(`${baseUrl}/`);
       const html = await response.text();
