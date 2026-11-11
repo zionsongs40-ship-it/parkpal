@@ -18,7 +18,7 @@ if (!nodeIsSupported) {
   console.log('OK: Node.js version is supported.');
 }
 
-for (const relativePath of ['server.js', 'public/index.html', 'public/app.js', 'public/style.css', 'data/stations.json', 'data/trivandrum-pois.json', 'scripts/import-trivandrum-pois.js']) {
+for (const relativePath of ['server.js', 'offline-map.js', 'data/offline-map/manifest.json', 'public/index.html', 'public/app.js', 'public/style.css', 'data/stations.json', 'data/trivandrum-pois.json', 'scripts/import-trivandrum-pois.js']) {
   const fullPath = path.join(root, relativePath);
   if (fs.existsSync(fullPath)) {
     console.log(`OK: ${relativePath}`);
@@ -29,6 +29,8 @@ for (const relativePath of ['server.js', 'public/index.html', 'public/app.js', '
 }
 
 try {
+  JSON.parse(fs.readFileSync(path.join(root, 'data/offline-map/manifest.json'), 'utf8'));
+  console.log('OK: offline map manifest contains valid JSON.');
   JSON.parse(fs.readFileSync(path.join(root, 'data/stations.json'), 'utf8'));
   JSON.parse(fs.readFileSync(path.join(root, 'data/trivandrum-pois.json'), 'utf8'));
   console.log('OK: station registry and Trivandrum POI index contain valid JSON.');
