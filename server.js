@@ -5,6 +5,9 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const {
+  findNearestAvailableStations
+} = require('./index');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -158,6 +161,64 @@ app.get('/api/ip-location', async (req, res) => {
 app.get('/api/stations', (req, res) => {
   const stations = getStations();
   res.json({ success: true, count: stations.length, data: stations });
+});
+// NEXORA — Find the 5 nearest approved, available parking stations
+app.get('/api/nexora/find', (req, res) => {
+  const { lat, lng } = req.query;
+
+  if (lat === undefined || lng === undefined ||
+      lat.trim() === '' || lng.trim() === '') {
+    return res.status(400).json({
+      success: false,
+      agent: 'NEXORA',
+      message: 'A valid map-pin location is required.'
+    });
+  }
+
+  const latitude = Number(lat);
+  const longitude = Number(lng);
+
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return res.status(400).json({
+      success: false,
+      agent: 'NEXORA',
+      message: 'Invalid coordinates.'
+    });
+  }
+
+  try {
+    const stations = getStations();
+
+    const results = findNearestAvailableStations({
+      lat: latitude,
+      lng: longitude,
+      stations,
+      radiusKm: 2,
+      limit: 5
+    });
+
+    res.json({
+      success: true,
+      agent: 'NEXORA',
+      searchCenter: {
+        lat: latitude,
+        lng: longitude
+      },
+      radiusKm: 2,
+      limit: 5,
+      count: results.length,
+      stations: results,
+      message: results.length
+        ? `NEXORA found ${results.length} available approved parking station(s).`
+        : 'No approved available parking stations found within 2 km.'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      agent: 'NEXORA',
+      message: 'NEXORA could not complete the parking search.'
+    });
+  }
 });
 
 // 3. GET /api/stations/scan - Generate 20-30 demo parking stations anywhere in the world
