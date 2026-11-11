@@ -66,19 +66,20 @@ try {
   } else {
     console.log('OK: startup does not replace the school default with an IP lookup.');
   }
-  const navigationKeepsOnlyApprovedStations =
+  const navigationShowsOnlyChosenStops =
     frontend.includes('state.isNavigating = active;') &&
     frontend.includes('setNavigationMode(true);') &&
     frontend.includes('setNavigationMode(false);') &&
     frontend.includes(`parkingList.innerHTML = '';`) &&
     frontend.includes(`scanBarContainer.style.display = active ? 'none' : '';`) &&
-    frontend.includes('filteredList.filter(st => !st.isDemoData && st.isApproved !== false)') &&
-    frontend.includes('Demo parking stations are hidden; approved stations remain visible');
+    frontend.includes('? state.navigationStations : filteredList') &&
+    frontend.includes('state.navigationStations = [station]') &&
+    frontend.includes('state.navigationStations = selectedStops');
 
-  if (navigationKeepsOnlyApprovedStations) {
-    console.log('OK: demo stations and nearby list are hidden during navigation while approved community pins remain visible.');
+  if (navigationShowsOnlyChosenStops) {
+    console.log('OK: unrelated parking pins and nearby results are hidden during navigation; only chosen trip stops can remain visible.');
   } else {
-    console.error('FAIL: navigation does not preserve approved community parking stations correctly.');
+    console.error('FAIL: navigation does not restrict parking markers to the chosen destination or trip stops.');
     failed = true;
   }
 
@@ -166,5 +167,33 @@ try {
   }
 } catch (error) {
   console.error(`FAIL: Could not verify city-wide Plan Trip (${error.message}).`);
+  failed = true;
+}
+
+// Confirm NEXORA has real approved-station SCAN and route-corridor trip discovery.
+try {
+  const html = fs.readFileSync(path.join(root, 'public/index.html'), 'utf8');
+  const frontend = fs.readFileSync(path.join(root, 'public/app.js'), 'utf8');
+  const backend = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
+  const engine = fs.readFileSync(path.join(root, 'index.js'), 'utf8');
+  const nexoraFlow =
+    backend.includes("app.get('/api/nexora/find'") &&
+    backend.includes("app.post('/api/nexora/along-route'") &&
+    backend.includes("app.post('/api/route/multi'") &&
+    engine.includes('findStationsAlongRoute') &&
+    frontend.includes('/api/nexora/find?lat=') &&
+    frontend.includes("fetch('/api/nexora/along-route'") &&
+    frontend.includes("fetch('/api/route/multi'") &&
+    frontend.includes('nexoraTripResults') &&
+    html.includes('nexoraTripPanel') &&
+    html.includes('Find Route Parking');
+  if (nexoraFlow) {
+    console.log('OK: NEXORA SCAN and multi-stop road-trip parking discovery are connected.');
+  } else {
+    console.error('FAIL: NEXORA SCAN or multi-stop road-trip discovery is incomplete.');
+    failed = true;
+  }
+} catch (error) {
+  console.error(`FAIL: Could not verify NEXORA route discovery (${error.message}).`);
   failed = true;
 }
