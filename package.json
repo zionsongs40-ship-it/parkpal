@@ -9,7 +9,8 @@
     "check": "node --check server.js && node --check offline-map.js && node --check public/app.js && node --check scripts/check-project.js && node --check scripts/import-trivandrum-pois.js && node scripts/check-project.js",
     "test": "node --test",
     "verify": "npm run check && npm test",
-    "import:trivandrum": "node scripts/import-trivandrum-pois.js"
+    "import:trivandrum": "node scripts/import-trivandrum-pois.js",
+    "postinstall": "node scripts/copy-vendor-assets.js"
   },
   "keywords": [
     "smart-city",
@@ -22,7 +23,10 @@
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "leaflet": "^1.9.4",
+    "protomaps-leaflet": "^5.1.0",
+    "@fortawesome/fontawesome-free": "^6.5.1"
   },
   "private": true,
   "engines": {
