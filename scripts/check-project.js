@@ -39,6 +39,31 @@ try {
   failed = true;
 }
 
+// Confirm the offline map renderer and locally hosted browser assets are installed.
+for (const dependency of ['leaflet', 'protomaps-leaflet', '@fortawesome/fontawesome-free']) {
+  try {
+    require.resolve(`${dependency}/package.json`, { paths: [root] });
+    console.log(`OK: ${dependency} is installed.`);
+  } catch {
+    console.error(`FAIL: ${dependency} is missing. Run npm install.`);
+    failed = true;
+  }
+}
+
+for (const relativePath of [
+  'public/vendor/leaflet/leaflet.js',
+  'public/vendor/leaflet/leaflet.css',
+  'public/vendor/protomaps/protomaps-leaflet.js',
+  'public/vendor/fontawesome/all.min.css'
+]) {
+  if (fs.existsSync(path.join(root, relativePath))) {
+    console.log(`OK: ${relativePath} is available locally.`);
+  } else {
+    console.error(`FAIL: ${relativePath} is missing. Run npm install to copy vendor assets.`);
+    failed = true;
+  }
+}
+
 for (const dependency of ['express', 'cors']) {
   try {
     require.resolve(dependency, { paths: [root] });
