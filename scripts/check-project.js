@@ -42,7 +42,13 @@ try {
 // Confirm the offline map renderer and locally hosted browser assets are installed.
 for (const dependency of ['leaflet', 'protomaps-leaflet', '@fortawesome/fontawesome-free']) {
   try {
-    require.resolve(`${dependency}/package.json`, { paths: [root] });
+    if (dependency === '@fortawesome/fontawesome-free') {
+      if (!fs.existsSync(path.join(root, 'node_modules', '@fortawesome', 'fontawesome-free', 'package.json'))) {
+        throw new Error('package directory missing');
+      }
+    } else {
+      require.resolve(dependency, { paths: [root] });
+    }
     console.log(`OK: ${dependency} is installed.`);
   } catch {
     console.error(`FAIL: ${dependency} is missing. Run npm install.`);
