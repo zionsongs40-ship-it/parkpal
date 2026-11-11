@@ -162,12 +162,12 @@ app.get('/api/stations', (req, res) => {
   const stations = getStations();
   res.json({ success: true, count: stations.length, data: stations });
 });
-// NEXORA — Find the 5 nearest approved, available parking stations
 
 // NEXORA — Find the 5 nearest approved, available parking stations
 app.get('/api/nexora/find', (req, res) => {
   const { lat, lng } = req.query;
 
+  // Require a selected map-pin location
   if (typeof lat !== 'string' || typeof lng !== 'string' ||
       !lat.trim() || !lng.trim()) {
     return res.status(400).json({
@@ -180,7 +180,9 @@ app.get('/api/nexora/find', (req, res) => {
   const latitude = Number(lat);
   const longitude = Number(lng);
 
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+  // Validate latitude and longitude
+  if (!Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
       latitude < -90 || latitude > 90 ||
       longitude < -180 || longitude > 180) {
     return res.status(400).json({
@@ -193,6 +195,7 @@ app.get('/api/nexora/find', (req, res) => {
   try {
     const stations = getStations();
 
+    // Find approved, non-demo, available stations within 2 km
     const results = findNearestAvailableStations({
       lat: latitude,
       lng: longitude,
@@ -216,7 +219,10 @@ app.get('/api/nexora/find', (req, res) => {
         ? `NEXORA found ${results.length} available approved parking station(s).`
         : 'No approved available parking stations found within 2 km.'
     });
+
   } catch (error) {
+    console.error('[NEXORA]', error);
+
     return res.status(500).json({
       success: false,
       agent: 'NEXORA',
@@ -225,75 +231,6 @@ app.get('/api/nexora/find', (req, res) => {
   }
 });
 
-}
-
-const latitude = Number(lat);
-const longitude = Number(lng);
-
-if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
-    latitude < -90 || latitude > 90 ||
-    longitude < -180 || longitude > 180) {
-  return res.status(400).json({
-    success: false,
-    agent: 'NEXORA',
-    message: 'Invalid coordinates.'
-  });
-}
-
-  if (lat === undefined || lng === undefined ||
-      lat.trim() === '' || lng.trim() === '') {
-    return res.status(400).json({
-      success: false,
-      agent: 'NEXORA',
-      message: 'A valid map-pin location is required.'
-    });
-  }
-
-  const latitude = Number(lat);
-  const longitude = Number(lng);
-
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    return res.status(400).json({
-      success: false,
-      agent: 'NEXORA',
-      message: 'Invalid coordinates.'
-    });
-  }
-
-  try {
-    const stations = getStations();
-
-    const results = findNearestAvailableStations({
-      lat: latitude,
-      lng: longitude,
-      stations,
-      radiusKm: 2,
-      limit: 5
-    });
-
-    res.json({
-      success: true,
-      agent: 'NEXORA',
-      searchCenter: {
-        lat: latitude,
-        lng: longitude
-      },
-      radiusKm: 2,
-      limit: 5,
-      count: results.length,
-      stations: results,
-      message: results.length
-        ? `NEXORA found ${results.length} available approved parking station(s).`
-        : 'No approved available parking stations found within 2 km.'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      agent: 'NEXORA',
-      message: 'NEXORA could not complete the parking search.'
-    });
-  }
-});
 
 // 3. GET /api/stations/scan - Generate 20-30 demo parking stations anywhere in the world
 app.get('/api/stations/scan', async (req, res) => {
