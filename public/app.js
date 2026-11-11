@@ -927,6 +927,29 @@ document.addEventListener('DOMContentLoaded', () => {
     btnStartTripRoute.innerHTML = '<i class="fa-solid fa-magnifying-glass-location"></i> Find Route Parking';
   }
 
+  const MAX_NEXORA_TRIP_STOPS = 6;
+
+  function updateNexoraTripSelectionCount() {
+    const choices = Array.from(document.querySelectorAll('.nexora-trip-choice'));
+    const selectedCount = choices.filter(input => input.checked).length;
+
+    choices.forEach(input => {
+      const disableUnselected = !input.checked && selectedCount >= MAX_NEXORA_TRIP_STOPS;
+      input.disabled = disableUnselected;
+      const option = input.closest('.nexora-parking-option');
+      if (option) option.classList.toggle('at-selection-limit', disableUnselected);
+    });
+
+    const status = document.getElementById('nexoraTripStatus');
+    if (tripParkingResults.length) {
+      status.textContent = selectedCount
+        ? `${selectedCount} of ${MAX_NEXORA_TRIP_STOPS} parking stop(s) selected. ParkPal will visit them in route order.`
+        : `NEXORA found ${tripParkingResults.length} approved available station(s). Select up to ${MAX_NEXORA_TRIP_STOPS}.`;
+    }
+    document.getElementById('tripParkVal').textContent =
+      `${selectedCount} selected · ${tripParkingResults.length} found`;
+  }
+
   function renderNexoraTripStations(stations) {
     const resultsEl = document.getElementById('nexoraTripResults');
     if (!stations.length) {
@@ -948,6 +971,11 @@ document.addEventListener('DOMContentLoaded', () => {
         </span>
       </label>`;
     }).join('');
+
+    resultsEl.querySelectorAll('.nexora-trip-choice').forEach(input => {
+      input.addEventListener('change', updateNexoraTripSelectionCount);
+    });
+    updateNexoraTripSelectionCount();
   }
 
   async function findTripParkingAlongRoute() {
@@ -992,8 +1020,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ? discoveryJson.stations
         : [];
       renderNexoraTripStations(tripParkingResults);
-      document.getElementById('nexoraTripStatus').textContent =
-        `NEXORA found ${tripParkingResults.length} approved available station(s) along the route. Select one or more.`;
+      updateNexoraTripSelectionCount();
       document.getElementById('tripDistVal').textContent =
         routeJson.distanceKm ? `${routeJson.distanceKm} km` : '—';
       document.getElementById('tripTimeVal').textContent =
@@ -1030,8 +1057,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .filter(Boolean)
       .sort((a, b) => Number(a.routeProgress) - Number(b.routeProgress));
 
-    if (selectedStops.length > 6) {
-      showToast('Choose up to 6 parking stops for one trip.', 'fa-circle-exclamation');
+    if (selectedStops.length > MAX_NEXORA_TRIP_STOPS) {
+      showToast(`Choose up to ${MAX_NEXORA_TRIP_STOPS} parking stops for one trip.`, 'fa-circle-exclamation');
       return;
     }
 
