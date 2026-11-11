@@ -1578,3 +1578,38 @@ body {
   opacity: .45;
   cursor: not-allowed;
 }
+
+
+/* NEXORA road-trip parking selection */
+.nexora-trip-panel {
+  margin-top: 13px;
+  border: 1px solid rgba(16, 185, 129, .4);
+  border-radius: 12px;
+  background: rgba(6, 78, 59, .18);
+  overflow: hidden;
+}
+.nexora-trip-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(16, 185, 129, .2);
+}
+.nexora-trip-heading strong { color: #6ee7b7; font-size: 12px; }
+.nexora-trip-heading span { color: #cbd5e1; font-size: 10px; line-height: 1.4; }
+.nexora-trip-results { max-height: 190px; overflow-y: auto; }
+.nexora-parking-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, .15);
+  color: #e2e8f0;
+  cursor: pointer;
+}
+.nexora-parking-option:last-child { border-bottom: 0; }
+.nexora-parking-option input { margin-top: 3px; accent-color: #10b981; }
+.nexora-parking-option-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 3px; }
+.nexora-parking-option-copy strong { font-size: 11px; }
+.nexora-parking-option-copy small { color: #94a3b8; font-size: 10px; line-height: 1.4; }
+.nexora-parking-empty { margin: 0; padding: 12px; color: #cbd5e1; font-size: 11px; line-height: 1.5; }
