@@ -254,42 +254,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Fetch temporary simulated facilities while refreshing permanent approved stations.
+  // Load only saved community stations. NEXORA never treats generated demo spots as real parking.
   async function loadDemoParking(lat, lng, showFeedback = false) {
-    const requestId = ++latestParkingRequestId;
-
     try {
-      const [res] = await Promise.all([
-        fetch(`/api/stations/scan?lat=${lat}&lng=${lng}&radius=4`),
-        loadApprovedCommunityStations()
-      ]);
-      if (!res.ok) throw new Error('Parking demo request failed');
-
-      const json = await res.json();
-      if (!json.success || !Array.isArray(json.stations)) {
-        throw new Error('Parking demo returned an invalid response');
+      await loadApprovedCommunityStations();
+      state.demoStations = [];
+      combineStationCollections();
+      renderStationMarkers();
+      if (showFeedback) {
+        showToast(`Loaded ${state.communityStations.length} saved community station(s).`, 'fa-square-parking');
       }
-
-      if (requestId === latestParkingRequestId) {
-        state.demoStations = json.stations.map(st => ({ ...st, isDemoData: true, isApproved: false }));
-        combineStationCollections();
-        renderStationMarkers();
-
-        if (showFeedback) {
-          showToast(`Generated ${json.foundCount} simulated parking spots.`, "fa-flask");
-        }
-      }
-
       return true;
-    } catch (e) {
-      console.warn("Parking search request failed:", e);
-      if (requestId === latestParkingRequestId) {
-        state.demoStations = [];
-        combineStationCollections();
-        renderStationMarkers();
-        if (showFeedback) {
-          showToast('Demo scan is unavailable. Approved community stations are still saved.', 'fa-circle-exclamation');
-        }
-      }
+    } catch (error) {
+      console.warn('Saved parking stations could not be refreshed:', error);
       return false;
     }
   }
@@ -387,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => toast.classList.remove('show'), 3500);
   }
 
-  // SCAN ACTION (Shows 20-30 simulated facilities around the current map center)
+  // SCAN ACTION (NEXORA searches approved, available stations within 2 km of the map pin)
   const btnScan = document.getElementById('btnScan');
   const radarOverlay = document.getElementById('radarOverlay');
   const bottomSheet = document.getElementById('bottomSheet');
@@ -404,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const parkingList = document.getElementById('parkingList');
       if (parkingList) parkingList.innerHTML = '';
       document.getElementById('sheetSubtitle').textContent =
-        'Demo parking stations are hidden; approved stations remain visible';
+        'Only selected parking stops are visible during navigation';
       radarOverlay.style.display = 'none';
     }
 
@@ -471,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.isNavigating) {
       bottomSheet.classList.remove('open');
       document.getElementById('sheetSubtitle').textContent =
-        'Demo parking stations are hidden; approved stations remain visible';
+        'Only selected parking stops are visible during navigation';
       return;
     }
 
