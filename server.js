@@ -164,7 +164,27 @@ app.get('/api/stations', (req, res) => {
 });
 // NEXORA — Find the 5 nearest approved, available parking stations
 app.get('/api/nexora/find', (req, res) => {
-  const { lat, lng } = req.query;
+  if (typeof lat !== 'string' || typeof lng !== 'string' ||
+    !lat.trim() || !lng.trim()) {
+  return res.status(400).json({
+    success: false,
+    agent: 'NEXORA',
+    message: 'A valid map-pin location is required.'
+  });
+}
+
+const latitude = Number(lat);
+const longitude = Number(lng);
+
+if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+    latitude < -90 || latitude > 90 ||
+    longitude < -180 || longitude > 180) {
+  return res.status(400).json({
+    success: false,
+    agent: 'NEXORA',
+    message: 'Invalid coordinates.'
+  });
+}
 
   if (lat === undefined || lng === undefined ||
       lat.trim() === '' || lng.trim() === '') {
