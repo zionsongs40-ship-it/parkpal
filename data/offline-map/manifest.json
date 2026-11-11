@@ -9,5 +9,5 @@
   "maxZoom": 14,
   "source": "OpenStreetMap-derived data",
   "attribution": "© OpenStreetMap contributors",
-  "notes": "The archive is generated and installed locally. This manifest does not include map data."
+  "notes": "The PMTiles archive is a separate data asset and is not included in this repository yet."
 }
