@@ -253,20 +253,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Fetch temporary simulated facilities while refreshing permanent approved stations.
-  // Load only saved community stations. NEXORA never treats generated demo spots as real parking.
+  // Load temporary simulated map markers separately from approved community stations.
+  // These demo records are for map/exhibition display only; NEXORA filters them out.
   async function loadDemoParking(lat, lng, showFeedback = false) {
     try {
-      await loadApprovedCommunityStations();
-      state.demoStations = [];
+      await Promise.all([
+        loadApprovedCommunityStations(),
+        (async () => {
+          const params = new URLSearchParams({
+            lat: String(lat),
+            lng: String(lng),
+            radius: '4'
+          });
+          const response = await fetch(`/api/stations/scan?${params.toString()}`);
+          if (!response.ok) throw new Error('Demo parking scan failed');
+          const result = await response.json();
+          if (!result.success || !Array.isArray(result.stations)) {
+            throw new Error(result.message || 'Demo parking data is unavailable');
+          }
+          state.demoStations = result.stations.map(station => ({
+            ...station,
+            isDemoData: true,
+            isApproved: false
+          }));
+        })()
+      ]);
+
       combineStationCollections();
       renderStationMarkers();
       if (showFeedback) {
-        showToast(`Loaded ${state.communityStations.length} saved community station(s).`, 'fa-square-parking');
+        showToast(
+          `Loaded ${state.demoStations.length} demo locations and ${state.communityStations.length} saved community station(s).`,
+          'fa-square-parking'
+        );
       }
       return true;
     } catch (error) {
-      console.warn('Saved parking stations could not be refreshed:', error);
+      console.warn('Parking locations could not be refreshed:', error);
+      // Keep any demo locations already loaded and keep registered stations separate.
+      combineStationCollections();
+      renderStationMarkers();
+      if (showFeedback) {
+        showToast('Could not load demo parking locations. Check that the Node.js server is running.', 'fa-circle-exclamation');
+      }
       return false;
     }
   }
