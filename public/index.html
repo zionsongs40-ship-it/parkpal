@@ -254,7 +254,7 @@
           <div class="modal-icon-badge route"><i class="fa-solid fa-route"></i></div>
           <div>
             <h3>Plan Your Trip</h3>
-            <p>Search locations across Thiruvananthapuram and choose your destination before starting.</p>
+            <p>Choose a destination, then let NEXORA find approved parking stops along your route.</p>
           </div>
         </div>
         <button class="modal-close" id="btnCloseTrip"><i class="fa-solid fa-xmark"></i></button>
@@ -289,6 +289,15 @@
           </div>
         </div>
 
+        <section class="nexora-trip-panel" id="nexoraTripPanel" aria-live="polite">
+          <div class="nexora-trip-heading">
+            <strong>NEXORA · Parking along your route</strong>
+            <span id="nexoraTripStatus">Choose a destination, then find available parking stops.</span>
+          </div>
+          <div class="nexora-trip-results" id="nexoraTripResults">
+            <p class="trip-location-message">No route search yet.</p>
+          </div>
+        </section>
         <div class="form-group checkbox-toggle">
           <label>
             <input type="checkbox" id="tripIncludeReturn" checked>
@@ -313,7 +322,7 @@
 
         <div class="modal-footer">
           <button type="button" class="btn-secondary" id="btnCancelTrip">Cancel</button>
-          <button type="button" class="btn-primary" id="btnStartTripRoute" disabled><i class="fa-solid fa-paper-plane"></i> Start Planned Trip</button>
+          <button type="button" class="btn-primary" id="btnStartTripRoute" disabled><i class="fa-solid fa-magnifying-glass-location"></i> Find Route Parking</button>
         </div>
       </div>
     </div>
