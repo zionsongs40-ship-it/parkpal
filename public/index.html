@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ParkPal - Smart Parking Scanner & Trip Planner</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -85,9 +85,9 @@
             <i class="fa-solid fa-square-parking"></i>
             <span class="fab-tooltip">Register Parking</span>
           </button>
-          <button class="fab-btn" id="btnMapLayer" title="Switch Map (Google Maps / Real Satellite)">
+          <button class="fab-btn" id="btnMapLayer" title="Switch Offline Map Style">
             <i class="fa-solid fa-layer-group"></i>
-            <span class="fab-tooltip">Switch Map Style</span>
+            <span class="fab-tooltip">Offline Light / Dark</span>
           </button>
           <button class="fab-btn" id="btnPlanTrip" title="Plan Trip">
             <i class="fa-solid fa-route"></i>
@@ -396,7 +396,8 @@
   <!-- Toast Notification -->
   <div class="toast-notification" id="toastNotice"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="/vendor/protomaps/protomaps-leaflet.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
