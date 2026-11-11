@@ -1,8 +1,15 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { NexusAgent } from "./index.js";
 import { registerBasicTools } from "./tools.js";
 
-const workspace = "D:/NEXUS";
+// Resolve the ParkPal repository root from this file, rather than assuming
+// that NEXUS is installed at a fixed path such as D:/NEXUS.
+const workspace = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "../../../.."
+);
 
 const nexus = new NexusAgent();
 
