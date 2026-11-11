@@ -6,7 +6,8 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const {
-  findNearestAvailableStations
+  findNearestAvailableStations,
+  findStationsAlongRoute
 } = require('./index');
 
 const app = express();
@@ -229,6 +230,112 @@ app.get('/api/nexora/find', (req, res) => {
       message: 'NEXORA could not complete the parking search.'
     });
   }
+});
+
+
+// NEXORA — Find approved, available parking stations near a planned road route.
+app.post('/api/nexora/along-route', (req, res) => {
+  const routeCoordinates = req.body && req.body.routeCoordinates;
+  if (!Array.isArray(routeCoordinates) || routeCoordinates.length < 2) {
+    return res.status(400).json({
+      success: false,
+      agent: 'NEXORA',
+      message: 'A valid planned route is required.'
+    });
+  }
+
+  try {
+    const stations = findStationsAlongRoute({
+      routeCoordinates,
+      stations: getStations(),
+      corridorKm: 2,
+      limit: 20
+    });
+    return res.json({
+      success: true,
+      agent: 'NEXORA',
+      corridorKm: 2,
+      count: stations.length,
+      stations,
+      message: stations.length
+        ? `NEXORA found ${stations.length} approved available station(s) along the route.`
+        : 'No approved available parking stations were found within 2 km of this route.'
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      agent: 'NEXORA',
+      message: error.message || 'NEXORA could not inspect this route.'
+    });
+  }
+});
+
+// ParkPal — Build one route through the selected parking stops and final destination.
+app.post('/api/route/multi', async (req, res) => {
+  const waypoints = req.body && req.body.waypoints;
+  if (!Array.isArray(waypoints) || waypoints.length < 2 || waypoints.length > 8) {
+    return res.status(400).json({
+      success: false,
+      message: 'Provide between 2 and 8 route waypoints.'
+    });
+  }
+
+  const validWaypoints = waypoints.map(point => {
+    const lat = Number(Array.isArray(point) ? point[0] : point && point.lat);
+    const lng = Number(Array.isArray(point) ? point[1] : point && point.lng);
+    return Number.isFinite(lat) && Number.isFinite(lng) &&
+      lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+      ? [lat, lng]
+      : null;
+  });
+
+  if (validWaypoints.some(point => point === null)) {
+    return res.status(400).json({
+      success: false,
+      message: 'One or more route waypoints have invalid coordinates.'
+    });
+  }
+
+  try {
+    const coordinates = validWaypoints
+      .map(([lat, lng]) => `${lng},${lat}`)
+      .join(';');
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson&steps=false`;
+    const response = await fetch(osrmUrl, {
+      headers: { 'User-Agent': 'ParkPal-App/2.0' },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.routes && data.routes.length) {
+        const route = data.routes[0];
+        return res.json({
+          success: true,
+          source: 'osrm',
+          distanceKm: Number((route.distance / 1000).toFixed(1)),
+          durationMinutes: Math.max(1, Math.round(route.duration / 60)),
+          coordinates: route.geometry.coordinates.map(([lng, lat]) => [lat, lng])
+        });
+      }
+    }
+  } catch (error) {
+    // The local straight-line fallback below keeps the itinerary usable offline.
+  }
+
+  let distanceKm = 0;
+  for (let i = 0; i < validWaypoints.length - 1; i += 1) {
+    distanceKm += calculateDistance(
+      validWaypoints[i][0], validWaypoints[i][1],
+      validWaypoints[i + 1][0], validWaypoints[i + 1][1]
+    );
+  }
+  return res.json({
+    success: true,
+    source: 'straight-line-fallback',
+    distanceKm: Number(distanceKm.toFixed(1)),
+    durationMinutes: Math.max(1, Math.round((distanceKm / 30) * 60)),
+    coordinates: validWaypoints
+  });
 });
 
 
