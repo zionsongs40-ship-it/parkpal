@@ -1,0 +1,13 @@
+{
+  "name": "ParkPal Global Offline Map",
+  "version": 1,
+  "status": "archive-pending",
+  "archive": "world.pmtiles",
+  "format": "PMTiles",
+  "budgetGB": 20,
+  "minZoom": 0,
+  "maxZoom": 14,
+  "source": "OpenStreetMap-derived data",
+  "attribution": "© OpenStreetMap contributors",
+  "notes": "The PMTiles archive is a separate data asset and is not included in this repository yet."
+}

@@ -15,3 +15,6 @@ Thumbs.db
 # Generated NEXUS imports (keep the directory itself if it has a placeholder)
 data/nexus-imports/*
 !data/nexus-imports/.gitkeep
+
+# Large generated offline map archive (distribute separately, never commit it)
+data/offline-map/*.pmtiles
