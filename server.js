@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const { registerOfflineMapRoutes } = require('./offline-map');
 const {
   findNearestAvailableStations,
   findStationsAlongRoute
@@ -19,6 +20,9 @@ const POI_FILE = path.join(__dirname, 'data', 'trivandrum-pois.json');
 app.use(cors());
 app.use(express.json({ limit: '7mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Optional worldwide offline map archive (PMTiles).
+registerOfflineMapRoutes(app, { express, dataDir: path.join(__dirname, 'data') });
 
 // Helper: Haversine distance formula (in km)
 function calculateDistance(lat1, lon1, lat2, lon2) {
