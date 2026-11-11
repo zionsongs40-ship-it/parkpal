@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ParkPal - Smart Parking Scanner & Trip Planner</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="expo-header">
+    <div class="expo-title">
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
+        <span class="badge">Computer Science Exhibition 2026</span>
+        <span class="badge node-status" id="nodeStatusBadge"><i class="fa-solid fa-flask"></i> Global Demo Mode</span>
+      </div>
+      <h1>ParkPal <span class="highlight">Interactive Demo</span></h1>
+    </div>
+    <div class="expo-controls">
+      <button class="expo-btn" id="toggleViewBtn" title="Switch between Phone frame and Fullscreen">
+        <i class="fa-solid fa-mobile-screen"></i> <span>Toggle Phone Frame</span>
+      </button>
+      <button class="expo-btn accent" id="openPitchBtn">
+        <i class="fa-solid fa-award"></i> <span>Judge / Viva Guide</span>
+      </button>
+    </div>
+  </div>
+
+  <main class="demo-wrapper">
+    <!-- Phone Mockup Container -->
+    <div class="phone-frame" id="phoneContainer">
+      <div class="phone-notch">
+        <div class="speaker"></div>
+        <div class="camera"></div>
+      </div>
+      
+      <div class="phone-screen">
+        <!-- Status Bar -->
+        <div class="status-bar">
+          <span class="status-time" id="statusClock">12:30</span>
+          <div class="status-icons">
+            <i class="fa-solid fa-signal"></i>
+            <i class="fa-solid fa-wifi"></i>
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
+        </div>
+
+        <!-- App Header & Search Bar -->
+        <div class="app-topbar">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Search any city or address..." autocomplete="off">
+            <button class="clear-btn" id="clearSearchBtn" style="display: none;">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <!-- Quick Search Results Dropdown -->
+          <div class="search-dropdown" id="searchDropdown" style="display: none;"></div>
+        </div>
+
+        <!-- Map Canvas -->
+        <div id="map"></div>
+        <div class="nexus-pin-picker-banner" id="nexusPinPickerBanner" style="display:none;">
+          <div class="nexus-pin-banner-copy">
+            <strong id="nexusPinPickerTitle">Choose parking location</strong>
+            <span id="nexusPinPickerMessage">Tap the exact parking spot on the map. The pin will appear there.</span>
+          </div>
+          <div class="nexus-pin-banner-actions">
+            <button type="button" class="nexus-pin-confirm" id="btnNexusConfirmPinPick" disabled>Confirm pin</button>
+            <button type="button" id="btnNexusCancelPinPick">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Floating Sidebar Controls (from Notebook Sketch) -->
+        <div class="map-floating-sidebar">
+          <button class="fab-btn" id="btnMyLocation" title="Exhibition Demo Location" aria-label="Exhibition Demo Location">
+            <i class="fa-solid fa-location-crosshairs"></i>
+            <span class="fab-tooltip">Exhibition Location</span>
+          </button>
+          <button class="fab-btn" id="btnRegister" title="Register a Parking Station">
+            <i class="fa-solid fa-square-parking"></i>
+            <span class="fab-tooltip">Register Parking</span>
+          </button>
+          <button class="fab-btn" id="btnMapLayer" title="Switch Map (Google Maps / Real Satellite)">
+            <i class="fa-solid fa-layer-group"></i>
+            <span class="fab-tooltip">Switch Map Style</span>
+          </button>
+          <button class="fab-btn" id="btnPlanTrip" title="Plan Trip">
+            <i class="fa-solid fa-route"></i>
+            <span class="fab-tooltip">Plan Trip</span>
+          </button>
+          <div class="zoom-group">
+            <button class="fab-btn small" id="btnZoomIn" title="Zoom In">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <button class="fab-btn small" id="btnZoomOut" title="Zoom Out">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Route Navigation Card (Hidden by default) -->
+        <div class="navigation-banner" id="navBanner" style="display: none;">
+          <div class="nav-icon">
+            <i class="fa-solid fa-turn-up"></i>
+          </div>
+          <div class="nav-details">
+            <div class="nav-title" id="navDestName">Route preview</div>
+            <div class="nav-stats">
+              <span id="navETA"><i class="fa-regular fa-clock"></i> 4 min</span>
+              <span id="navDist"><i class="fa-solid fa-location-arrow"></i> 650 m</span>
+              <span class="badge-free" id="navSlots">Parking availability unknown</span>
+            </div>
+          </div>
+          <button class="nav-close-btn" id="btnEndNav" title="End Route">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Radar Pulse Animation Overlay -->
+        <div class="radar-scan-overlay" id="radarOverlay">
+          <div class="radar-circle radar-1"></div>
+          <div class="radar-circle radar-2"></div>
+          <div class="radar-circle radar-3"></div>
+          <div class="radar-ping"></div>
+          <div class="radar-status-pill">
+            <i class="fa-solid fa-satellite-dish fa-spin"></i> Generating demo parking stations...
+          </div>
+        </div>
+
+        <!-- Bottom SCAN Button (The centerpiece from the notebook sketch) -->
+        <div class="scan-bar-container">
+          <button class="scan-btn" id="btnScan">
+            <div class="scan-btn-inner">
+              <i class="fa-solid fa-tower-broadcast"></i>
+              <span>SCAN</span>
+            </div>
+          </button>
+          <div class="scan-subtext">20-30 simulated parking spots near any city</div>
+        </div>
+
+        <!-- Bottom Sheet Results Drawer -->
+        <div class="bottom-sheet" id="bottomSheet">
+          <div class="sheet-drag-handle" id="sheetHandle"></div>
+          <div class="sheet-header">
+            <div>
+              <h3 id="sheetTitle">Nearby Parking Stations</h3>
+              <p class="sheet-subtitle" id="sheetSubtitle">Nearby Parking Stations</p>
+            </div>
+            <button class="sheet-close" id="btnCloseSheet"><i class="fa-solid fa-chevron-down"></i></button>
+          </div>
+          <div class="sheet-filter-chips">
+            <button class="chip active" data-filter="all">All</button>
+            <button class="chip" data-filter="free">Free Only</button>
+            <button class="chip" data-filter="ev"><i class="fa-solid fa-bolt"></i> EV Ready</button>
+            <button class="chip" data-filter="bike"><i class="fa-solid fa-motorcycle"></i> 2-Wheeler</button>
+          </div>
+          <div class="parking-list" id="parkingList">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Bottom Android Navigation Keys (from user's sketch) -->
+        <div class="phone-nav-bar">
+          <div class="nav-key"><i class="fa-solid fa-bars"></i></div>
+          <div class="nav-key" id="homeKey"><i class="fa-regular fa-circle"></i></div>
+          <div class="nav-key" id="backKey"><i class="fa-solid fa-chevron-left"></i></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: Register a Parking Station (Sketch Point 3) -->
+  <div class="modal-overlay" id="registerModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge"><i class="fa-solid fa-square-parking"></i></div>
+          <div>
+            <h3>Register Parking Station</h3>
+            <p>Add your private spot, driveway or shop parking for free!</p>
+          </div>
+        </div>
+        <button class="modal-close" id="btnCloseRegister"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label>Station / Spot Name</label>
+          <input type="text" id="regName" placeholder="e.g. Abrah's Home Driveway, City Mart Parking" required>
+        </div>
+
+        <div class="nexus-pin-assist" id="nexusPinAssist">
+          <div class="nexus-file-assist-heading">
+            <span class="nexus-mark">N</span>
+            <div>
+              <strong>NEXUS</strong>
+              <span>MAP PIN LOCATION ASSISTANT</span>
+            </div>
+          </div>
+          <p>Choose the parking station's exact spot directly on ParkPal's map. No .osm file or location upload is needed.</p>
+          <div class="nexus-pin-actions">
+            <button type="button" class="nexus-file-button" id="btnNexusPickOnMap"><i class="fa-solid fa-map-pin"></i> Pick on map</button>
+            <button type="button" class="nexus-center-button" id="btnNexusUseMapCenter"><i class="fa-solid fa-crosshairs"></i> Use map center</button>
+          </div>
+          <div class="nexus-file-status" id="nexusPinStatus" role="status">A pin will be placed at the map center. You can move it by choosing another point.</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Available Slots</label>
+            <input type="number" id="regSlots" min="1" max="500" value="3" required>
+          </div>
+          <div class="form-group">
+            <label>Pricing</label>
+            <select id="regPrice">
+              <option value="Free">Totally Free! (₹0 / $0)</option>
+              <option value="Paid">Low Cost (₹20/hr)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Supported Vehicles</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" id="regCar" checked> 🚗 Cars</label>
+            <label><input type="checkbox" id="regBike" checked> 🏍️ Bikes</label>
+            <label><input type="checkbox" id="regEV"> ⚡ EV Charging</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Pin Location Mode</label>
+          <div class="location-picker-pill">
+            <i class="fa-solid fa-location-dot location-pin-indicator" aria-hidden="true"></i>
+            <span id="regLocationStatus">Set to current center map location</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btnCancelRegister">Cancel</button>
+          <button type="submit" class="btn-primary"><i class="fa-solid fa-check"></i> Register Station</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Plan Trip (Sketch Point 2) -->
+  <div class="modal-overlay" id="planTripModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge route"><i class="fa-solid fa-route"></i></div>
+          <div>
+            <h3>Plan Your Trip</h3>
+            <p>Search locations across Thiruvananthapuram and choose your destination before starting.</p>
+          </div>
+        </div>
+        <button class="modal-close" id="btnCloseTrip"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="trip-form">
+        <div class="trip-input-node">
+          <div class="node-bullet start"></div>
+          <div class="form-group">
+            <label>Starting Point</label>
+            <input type="text" id="tripStart" value="My Current GPS Location" readonly>
+          </div>
+        </div>
+
+        <div class="trip-input-node">
+          <div class="node-bullet end"></div>
+          <div class="form-group">
+            <label>Destination</label>
+            <input type="search" id="tripLocationSearch" placeholder="Search any place in Thiruvananthapuram…" autocomplete="off">
+            <div class="trip-location-tools">
+              <select id="tripCategoryFilter" aria-label="Filter locations by category">
+                <option value="all">All categories</option>
+              </select>
+              <span id="tripLocationCount" aria-live="polite">Loading city locations…</span>
+            </div>
+            <div class="trip-location-results" id="tripLocationResults" role="listbox" aria-label="Thiruvananthapuram locations">
+              <p class="trip-location-message">Loading locations…</p>
+            </div>
+            <div class="trip-selected-location" id="tripSelectedLocation" aria-live="polite">
+              No destination selected yet.
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group checkbox-toggle">
+          <label>
+            <input type="checkbox" id="tripIncludeReturn" checked>
+            <span>Plan Return Trip Parking Too</span>
+          </label>
+        </div>
+
+        <div class="trip-summary-box">
+          <div class="summary-item">
+            <span class="label">Est. Distance</span>
+            <span class="val" id="tripDistVal">4.2 km</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Est. Drive Time</span>
+            <span class="val" id="tripTimeVal">12 mins</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Parking Status</span>
+            <span class="val highlight" id="tripParkVal">Not reserved</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btnCancelTrip">Cancel</button>
+          <button type="button" class="btn-primary" id="btnStartTripRoute" disabled><i class="fa-solid fa-paper-plane"></i> Start Planned Trip</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Judge / Viva Presentation Pitch -->
+  <div class="modal-overlay" id="pitchModal" style="display: none;">
+    <div class="modal-card wide">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge gold"><i class="fa-solid fa-trophy"></i></div>
+          <div>
+            <h3>ParkPal • Computer Exhibition Viva & Pitch Guide</h3>
+            <p>Everything you need to impress the judges and visitors!</p>
+          </div>
+        </div>
+        <button class="modal-close" id="btnClosePitch"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="pitch-content">
+        <div class="pitch-grid">
+          <div class="pitch-card red-border">
+            <h4><i class="fa-solid fa-ban"></i> The Real-World Problem</h4>
+            <ul>
+              <li>Drivers spend an average of <strong>15–25 minutes</strong> hunting for parking in busy urban zones.</li>
+              <li>Sudden encounter with <strong>"NO PARKING"</strong> signs leads to high towing fines and traffic congestion.</li>
+              <li>Excess driving burns unnecessary fuel and spikes carbon emissions.</li>
+            </ul>
+          </div>
+          <div class="pitch-card green-border">
+            <h4><i class="fa-solid fa-lightbulb"></i> The ParkPal Solution</h4>
+            <ul>
+              <li><strong>Global One-Tap Scan:</strong> Generates 20-30 simulated parking stations near any searched city or map location.</li>
+              <li><strong>Demo Availability:</strong> Sample open-slot counts, rates, vehicle types, and EV options make the exhibition flow interactive. They are not real-world data.</li>
+              <li><strong>Trip Planner:</strong> Shows a demo route preview. It does not verify or reserve parking.</li>
+              <li><strong>Community Registry:</strong> Saves user-submitted demo entries separately from generated scan results.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pitch-section">
+          <h4><i class="fa-solid fa-code"></i> Tech Stack & Innovation</h4>
+          <div class="tags-row">
+            <span class="tech-tag">JavaScript (ES6+)</span>
+            <span class="tech-tag">Leaflet Geospatial Engine</span>
+            <span class="tech-tag">Global Synthetic Parking Data</span>
+            <span class="tech-tag">Web Audio Synthesizer</span>
+            <span class="tech-tag">Responsive Mobile-First UI</span>
+          </div>
+        </div>
+
+        <div class="pitch-section">
+          <h4><i class="fa-solid fa-play"></i> 1-Click Live Exhibition Scenarios:</h4>
+          <div class="scenario-buttons">
+            <button class="scenario-btn" id="scenScan">
+              <i class="fa-solid fa-tower-broadcast"></i> Demo: 1-Tap Radar Scan
+            </button>
+            <button class="scenario-btn" id="scenTrip">
+              <i class="fa-solid fa-route"></i> Demo: Trip to Grand Mall
+            </button>
+            <button class="scenario-btn" id="scenRegister">
+              <i class="fa-solid fa-plus-circle"></i> Demo: Add Free Driveway
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Toast Notification -->
+  <div class="toast-notification" id="toastNotice"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>

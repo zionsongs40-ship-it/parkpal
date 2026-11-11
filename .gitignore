@@ -1,0 +1,17 @@
+# Node dependencies (kept in the supplied exhibition ZIP for offline convenience)
+node_modules/
+
+# Local environment and logs
+.env
+.env.*
+!.env.example
+npm-debug.log*
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Generated NEXUS imports (keep the directory itself if it has a placeholder)
+data/nexus-imports/*
+!data/nexus-imports/.gitkeep

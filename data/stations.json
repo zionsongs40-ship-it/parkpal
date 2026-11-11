@@ -1,0 +1,64 @@
+[
+  {
+    "id": 1794369610603,
+    "name": "Sareeth Parking slot",
+    "lat": 8.393242943243713,
+    "lng": 76.97484970092775,
+    "slotsAvailable": 10,
+    "totalSlots": 10,
+    "price": "Paid",
+    "rate": "₹20/hr",
+    "type": [
+      "car",
+      "bike",
+      "ev"
+    ],
+    "isRegisteredCommunity": true,
+    "isRealWorldSpot": false,
+    "isApproved": true,
+    "approvalStatus": "approved",
+    "isDemoData": false,
+    "createdAt": "2026-11-11T04:00:10.603Z"
+  },
+  {
+    "id": 1794366690060,
+    "name": "Korean Wars Mem Hwy Parking Station",
+    "lat": 44.72268747825635,
+    "lng": -89.67148303985597,
+    "slotsAvailable": 20,
+    "totalSlots": 20,
+    "price": "Free",
+    "rate": "Totally Free (Community)",
+    "type": [
+      "car",
+      "bike",
+      "ev"
+    ],
+    "isRegisteredCommunity": true,
+    "isRealWorldSpot": false,
+    "isApproved": true,
+    "approvalStatus": "approved",
+    "isDemoData": false,
+    "createdAt": "2026-11-11T03:11:30.060Z"
+  },
+  {
+    "id": 1794366541033,
+    "name": "Demo park",
+    "lat": 8.485042506606709,
+    "lng": 76.98744535446168,
+    "slotsAvailable": 3,
+    "totalSlots": 3,
+    "price": "Free",
+    "rate": "Totally Free (Community)",
+    "type": [
+      "car",
+      "bike"
+    ],
+    "isRegisteredCommunity": true,
+    "isRealWorldSpot": false,
+    "isApproved": true,
+    "approvalStatus": "approved",
+    "isDemoData": false,
+    "createdAt": "2026-11-11T03:09:01.033Z"
+  }
+]

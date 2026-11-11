@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="openstreetmap-cgimap 2.1.0 (265954 spike-08.openstreetmap.org)" copyright="OpenStreetMap and contributors" attribution="http://www.openstreetmap.org/copyright" license="http://opendatacommons.org/licenses/odbl/1-0/">
+ <bounds minlat="-84.9000000" minlon="-168.8000000" maxlat="87.4000000" maxlon="-168.8000000"/>
+ <node id="9244819803" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.3849144" lon="-168.8000000"/>
+ <node id="9244819804" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.4936800" lon="-168.8446100"/>
+ <node id="9244819805" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.5592300" lon="-168.8701400"/>
+ <node id="9244819806" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.6234000" lon="-168.8970500"/>
+ <node id="9244819807" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.6700900" lon="-168.9154500"/>
+ <node id="9244819808" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7087300" lon="-168.9315500"/>
+ <node id="9244819809" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7140200" lon="-168.9338500"/>
+ <node id="9244819810" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7202300" lon="-168.9368400"/>
+ <node id="9244819811" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7282800" lon="-168.9402900"/>
+ <node id="9244819812" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7347200" lon="-168.9432800"/>
+ <node id="9244819813" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7453000" lon="-168.9483400"/>
+ <node id="9244819814" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7505900" lon="-168.9511000"/>
+ <node id="9244819815" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7551900" lon="-168.9536300"/>
+ <node id="9244819816" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7591000" lon="-168.9559300"/>
+ <node id="9244819817" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7600200" lon="-168.9566200"/>
+ <node id="9244819818" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7666900" lon="-168.9612200"/>
+ <node id="9244819819" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.7798000" lon="-168.9699600"/>
+ <node id="9244819820" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.8016500" lon="-168.9851400"/>
+ <node id="9244819821" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.8184400" lon="-168.9966400"/>
+ <node id="9244819822" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.8363800" lon="-169.0086000"/>
+ <node id="9244819823" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.8559300" lon="-169.0219400"/>
+ <node id="9244819824" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.8731800" lon="-169.0334400"/>
+ <node id="9244819825" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.8805400" lon="-169.0391900"/>
+ <node id="9244819826" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.8865200" lon="-169.0435600"/>
+ <node id="9244819827" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.8895100" lon="-169.0456300"/>
+ <node id="9244819828" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.8931900" lon="-169.0479300"/>
+ <node id="9244819829" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.8996300" lon="-169.0495400"/>
+ <node id="9244819830" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.9079100" lon="-169.0504600"/>
+ <node id="9244819831" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.9157300" lon="-169.0504600"/>
+ <node id="9244819832" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777" lat="-14.9359681" lon="-169.0522589"/>
+ <way id="1001595754" visible="true" version="1" changeset="113675211" timestamp="2021-11-12T02:15:55Z" user="❤️‍🔥_import" uid="8389777">
+  <nd ref="9244819803"/>
+  <nd ref="9244819804"/>
+  <nd ref="9244819805"/>
+  <nd ref="9244819806"/>
+  <nd ref="9244819807"/>
+  <nd ref="9244819808"/>
+  <nd ref="9244819809"/>
+  <nd ref="9244819810"/>
+  <nd ref="9244819811"/>
+  <nd ref="9244819812"/>
+  <nd ref="9244819813"/>
+  <nd ref="9244819814"/>
+  <nd ref="9244819815"/>
+  <nd ref="9244819816"/>
+  <nd ref="9244819817"/>
+  <nd ref="9244819818"/>
+  <nd ref="9244819819"/>
+  <nd ref="9244819820"/>
+  <nd ref="9244819821"/>
+  <nd ref="9244819822"/>
+  <nd ref="9244819823"/>
+  <nd ref="9244819824"/>
+  <nd ref="9244819825"/>
+  <nd ref="9244819826"/>
+  <nd ref="9244819827"/>
+  <nd ref="9244819828"/>
+  <nd ref="9244819829"/>
+  <nd ref="9244819830"/>
+  <nd ref="9244819831"/>
+  <nd ref="9244819832"/>
+  <tag k="communication" v="line"/>
+  <tag k="layer" v="-1"/>
+  <tag k="location" v="underwater"/>
+  <tag k="ref:linz:hydrographic_id" v="3805017"/>
+  <tag k="seamark:type" v="cable_submarine"/>
+  <tag k="source" v="LINZ;Sāmoa Islands to Tonga including Niuē Chart"/>
+ </way>
+</osm>
+
