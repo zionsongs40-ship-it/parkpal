@@ -305,9 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stationMarkers.forEach(m => map.removeLayer(m));
     stationMarkers = [];
 
-    const visibleStations = state.isNavigating
-      ? state.navigationStations
-      : filteredList;
+    const visibleStations = state.isNavigating ? state.navigationStations : filteredList;
 
     visibleStations.forEach(st => {
       const isCommunityStation = !st.isDemoData && st.isApproved !== false;
