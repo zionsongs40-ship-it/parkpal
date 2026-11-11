@@ -62,6 +62,7 @@ test('offline map endpoints', async (t) => {
       const body = await response.json();
       assert.equal(response.status, 200);
       assert.equal(body.installed, true);
+      assert.equal(body.status, 'installed');
       assert.equal(body.archiveSizeBytes, 36);
     });
   } finally {
