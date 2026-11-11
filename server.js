@@ -497,6 +497,7 @@ app.get('/api/route', async (req, res) => {
 
         return res.json({
           success: true,
+          source: 'osrm',
           distanceKm: distKm,
           durationMinutes: durationMins,
           coordinates: route.geometry.coordinates.map(coord => [coord[1], coord[0]])
@@ -505,15 +506,18 @@ app.get('/api/route', async (req, res) => {
     }
   } catch (err) {}
 
-  // Fallback
+  // Honest offline fallback: this is a straight-line preview, not road navigation.
+  const fallbackDistanceKm = calculateDistance(
+    Number(startLat), Number(startLng), Number(endLat), Number(endLng)
+  );
   res.json({
     success: true,
-    distanceKm: "1.2",
-    durationMinutes: 4,
+    source: 'straight-line-fallback',
+    distanceKm: fallbackDistanceKm.toFixed(1),
+    durationMinutes: Math.max(1, Math.round((fallbackDistanceKm / 30) * 60)),
     coordinates: [
-      [parseFloat(startLat), parseFloat(startLng)],
-      [(parseFloat(startLat) + parseFloat(endLat)) / 2 + 0.0005, (parseFloat(startLng) + parseFloat(endLng)) / 2 + 0.0005],
-      [parseFloat(endLat), parseFloat(endLng)]
+      [Number(startLat), Number(startLng)],
+      [Number(endLat), Number(endLng)]
     ]
   });
 });
