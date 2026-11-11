@@ -271,8 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Approved community stations are permanent map features. Only generated demo
-  // stations are hidden during navigation; the nearby results panel stays closed.
+  // During navigation, show only the parking stops explicitly selected for this trip.
   function renderStationMarkers(filteredList = state.stations) {
     stationMarkers.forEach(m => map.removeLayer(m));
     stationMarkers = [];
@@ -370,8 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const bottomSheet = document.getElementById('bottomSheet');
   const scanBarContainer = document.querySelector('.scan-bar-container');
 
-  // Keep temporary nearby results and scanning controls out of sight during routes.
-  // Approved community stations remain visible as permanent green map pins.
+  // Hide the nearby list and SCAN control during routes; only selected trip stops remain pinned.
   function setNavigationMode(active) {
     state.isNavigating = active;
     if (!active) state.navigationStations = [];
@@ -397,8 +395,8 @@ document.addEventListener('DOMContentLoaded', () => {
     radarOverlay.style.display = 'flex';
     bottomSheet.classList.remove('open');
 
-    // NEXORA SCAN is centred on the user's chosen map pin / current map centre.
-    const center = map.getCenter();
+    // NEXORA SCAN is centred on the user's draggable selected location pin.
+    const center = { lat: state.userLocation[0], lng: state.userLocation[1] };
     setTimeout(() => playRadarPing(), 500);
 
     try {
@@ -977,6 +975,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       tripRouteCoordinates = routeJson.coordinates;
+      if (routeJson.source === 'straight-line-fallback') {
+        showToast('Road routing is offline. NEXORA is checking the straight-line preview only.', 'fa-triangle-exclamation');
+      }
       const discoveryResponse = await fetch('/api/nexora/along-route', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1055,6 +1056,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       planTripModal.style.display = 'none';
+      if (route.source === 'straight-line-fallback') {
+        showToast('Road routing is offline. Showing a straight-line multi-stop preview.', 'fa-triangle-exclamation');
+      }
       setNavigationMode(true);
       state.navigationStations = selectedStops;
       if (routePolyline) map.removeLayer(routePolyline);
